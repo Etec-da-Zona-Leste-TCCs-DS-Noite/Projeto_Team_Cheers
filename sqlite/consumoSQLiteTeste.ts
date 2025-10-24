@@ -5,7 +5,7 @@ const db = new Database('CookClock');
 db.prepare(
     `CREATE TABLE IF NOT EXISTS geladeira (
         nome TEXT PRIMARY KEY AUTOINCREMENT NOT NULL,
-        quantidade TEXT,
+        quantidade TEXT NOT NULL,
         data_de_validade TEXT NOT NULL
 
     )`
