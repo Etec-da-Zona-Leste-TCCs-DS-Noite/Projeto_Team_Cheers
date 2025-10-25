@@ -4,7 +4,8 @@ const db = new Database('CookClock');
 
 db.prepare(
     `CREATE TABLE IF NOT EXISTS geladeira (
-        nome TEXT PRIMARY KEY AUTOINCREMENT NOT NULL,
+        id TEXT PRIMARY KEY NOT NULL
+        nome TEXT NOT NULL,
         quantidade TEXT NOT NULL,
         data_de_validade TEXT NOT NULL
 
@@ -17,13 +18,13 @@ function PrepararPraSalvar(nome: string, quantidade: number, dataDeValidade: Dat
 
     const hoje = new Date
 
-    if (dataDeValidade > hoje || dataDeValidade == undefined){
+    if (dataDeValidade < hoje || dataDeValidade == undefined){
         throw new Error("insira uma data válida")
     }
-    if (Number.isInteger(quantidade) || isNaN(quantidade) || quantidade < 0){
+    if (Number.isInteger(quantidade) || quantidade < 0){
         throw new Error("insira uma quantidade válida")
     }
-    if (nome == "" || nome != null){
+    if (!nome || nome.trim() === ""){
         throw new Error("insira um nome")
     }
 
@@ -32,7 +33,9 @@ function PrepararPraSalvar(nome: string, quantidade: number, dataDeValidade: Dat
 
     const quantidadeSalva = quantidade.toString()
 
-    const valido: string[] = [nome,quantidadeSalva,dataSalva]
+    const id = (nome + dataSalva)
+
+    const valido: string[] = [id,nome,quantidadeSalva,dataSalva]
 
     return valido
 }
@@ -56,13 +59,24 @@ function PrepararRetorno(nome:string , quantidadeEmString: string, dataEmString:
 
         return retorno
     }
+}
+function Deletar(id: string){
 
+    db.run(`DELETE FROM geladira WHERE id = ?`, [id], function(err) {
+        if (err){
+            console.log(err.message)
+        } else if (this.changes === 0){
+            console.log("Nada encontrado para deletar")
+        } else {
+            console.log("deletado com sucesso")
+        }
+    })
 }
 function Salvar(nome: string, quantidade: number, dataDeValidade: Date){
 
     const retorno = PrepararPraSalvar(nome,quantidade,dataDeValidade)
 
-    db.run(`INSERT INTO geladeira (nome, quantidade, data) VALUES (?, ?, ?)`, [retorno[0], retorno[1], retorno[2]], function(err){
+    db.run(`INSERT INTO geladeira (id, nome, quantidade, data) VALUES (?, ?, ?, ?)`, [retorno[0], retorno[1], retorno[2], retorno[3]], function(err){
         if (err){
             console.log(err.message)
         }
