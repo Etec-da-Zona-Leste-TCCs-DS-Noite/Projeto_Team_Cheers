@@ -1,5 +1,2 @@
 # Projeto_Team_Cheers
-- Arthur Henrique
-- Felipe Duarte, 
-- Melissa Reis 
-- Davi Daruix
+Arthur Henrique, Felipe Duarte, Melissa Reis, Davi Daruix
