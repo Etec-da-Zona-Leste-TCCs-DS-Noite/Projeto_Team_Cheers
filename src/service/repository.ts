@@ -6,7 +6,7 @@ db.prepare(
     `CREATE TABLE IF NOT EXISTS geladeira (
         id TEXT PRIMARY KEY NOT NULL
         nome TEXT NOT NULL,
-        quantidade TEXT NOT NULL,
+        quantidade INTEGER NOT NULL,
         data_de_validade TEXT NOT NULL
 
     )`
@@ -14,7 +14,7 @@ db.prepare(
 
 
 
-function PrepararPraSalvar(nome: string, quantidade: number, dataDeValidade: Date){
+export function PrepararPraSalvar(nome: string, quantidade: number, dataDeValidade: Date){
 
     const hoje = new Date
 
@@ -31,15 +31,13 @@ function PrepararPraSalvar(nome: string, quantidade: number, dataDeValidade: Dat
     const dataTraduzida = dataDeValidade.toLocaleDateString('pt-BR')
     const dataSalva = dataTraduzida.toString()
 
-    const quantidadeSalva = quantidade.toString()
-
     const id = (nome + dataSalva)
 
-    const valido: string[] = [id,nome,quantidadeSalva,dataSalva]
+    const valido: (string | number)[] = [id,nome,quantidade,dataSalva]
 
     return valido
 }
-function PrepararRetorno(nome:string , quantidadeEmString: string, dataEmString:string){
+export function PrepararRetorno(nome:string , quantidade: number, dataEmString:string){
 
     const regex = "/(\d{2})\/(\d{2})\/(\d{4})/"
 
@@ -55,12 +53,12 @@ function PrepararRetorno(nome:string , quantidadeEmString: string, dataEmString:
 
         const dataTraduzida = dataRecebida.toLocaleDateString('pt-BR')
 
-        const retorno: (string | number | Date)[] = [nome, Number.parseInt(quantidadeEmString), dataTraduzida]  
+        const retorno: (string | number | Date)[] = [nome, quantidade, dataTraduzida]  
 
         return retorno
     }
 }
-function Deletar(id: string){
+export function Deletar(id: string){
 
     db.run(`DELETE FROM geladira WHERE id = ?`, [id], function(err) {
         if (err){
@@ -72,7 +70,7 @@ function Deletar(id: string){
         }
     })
 }
-function Salvar(nome: string, quantidade: number, dataDeValidade: Date){
+export function Salvar(nome: string, quantidade: number, dataDeValidade: Date){
 
     const retorno = PrepararPraSalvar(nome,quantidade,dataDeValidade)
 
@@ -83,9 +81,9 @@ function Salvar(nome: string, quantidade: number, dataDeValidade: Date){
     console.log(`${nome} inserido com sucesso`)
     });
 }
-function ler(){
+export function ler(){
 
-    db.all("SELECT * FROM geladeira", [], (err, rows: {nome: string, quantidade: string, data_de_validade: string}[]) => {
+    db.all("SELECT * FROM geladeira", [], (err, rows: {nome: string, quantidade: number, data_de_validade: string}[]) => {
         if (err){
             console.error(err.message)
         }
@@ -97,9 +95,9 @@ function ler(){
         })
     })
 }
-function lerUmNome(nome: string){
+export function lerUmNome(nome: string){
 
-    db.all("SELECT * FROM WHERE nome = ?", [nome], (err, rows: {nome: string, quantidade: string, data_de_validade: string}[]) => {
+    db.all("SELECT * FROM WHERE nome = ?", [nome], (err, rows: {nome: string, quantidade: number, data_de_validade: string}[]) => {
         if (err){
             console.error(err.message)
         }else{
