@@ -1,116 +1,116 @@
-import { Database } from "sqlite3";
+import { openDatabaseAsync, type SQLiteDatabase, SQLiteRunResult } from "expo-sqlite";
 
-const db = new Database('CookClock');
+type Produto = {
+    id: string;
+    nome: string;
+    quantidade: number;
+    dataDeValidade: string;
+};
 
-db.prepare(
-    `CREATE TABLE IF NOT EXISTS geladeira (
-        id TEXT PRIMARY KEY NOT NULL
-        nome TEXT NOT NULL,
-        quantidade INTEGER NOT NULL,
-        data_de_validade TEXT NOT NULL
+type DtoRetorno = Omit<Produto, 'id'>;
 
-    )`
-).run();
+let db: SQLiteDatabase | null = null;
+const DB_NAME = 'geladeira.db';
 
-
-
-export function PrepararPraSalvar(nome: string, quantidade: number, dataDeValidade: Date){
-
-    const hoje = new Date
-
-    if (dataDeValidade < hoje || dataDeValidade == undefined){
-        throw new Error("insira uma data válida")
-    }
-    if (Number.isInteger(quantidade) || quantidade < 0){
-        throw new Error("insira uma quantidade válida")
-    }
-    if (!nome || nome.trim() === ""){
-        throw new Error("insira um nome")
-    }
-
-    const dataTraduzida = dataDeValidade.toLocaleDateString('pt-BR')
-    const dataSalva = dataTraduzida.toString()
-
-    const id = (nome + dataSalva)
-
-    const valido: (string | number)[] = [id,nome,quantidade,dataSalva]
-
-    return valido
+async function setupTableAsync(database: SQLiteDatabase): Promise<void> {
+    const sql = `
+        CREATE TABLE IF NOT EXISTS geladeira (
+            id TEXT PRIMARY KEY NOT NULL,
+            nome TEXT NOT NULL,
+            quantidade INTEGER NOT NULL,
+            data_de_validade TEXT NOT NULL
+        );
+    `;
+    await database.execAsync(sql);
+    console.log('[DB] Tabela geladeira inicializada.');
 }
-export function PrepararRetorno(nome:string , quantidade: number, dataEmString:string){
 
-    const regex = "/(\d{2})\/(\d{2})\/(\d{4})/"
+export async function getDb(): Promise<SQLiteDatabase> {
+    if (!db) {
+        db = await openDatabaseAsync(DB_NAME);
+        console.log(`[DB] Banco de dados '${DB_NAME}' aberto/criado.`);
+        await setupTableAsync(db);
+    }
+    return db;
+}
 
-    const resultado = dataEmString.match(regex)
+export async function inicializarDb(): Promise<void> {
+    await getDb();
+}
 
-    if (resultado){
+function PrepararPraSalvar(nome: string, quantidade: number, dataDeValidade: Date): Produto {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
 
-        const [dia, mes, ano] = resultado.slice(1)
+    const validade = new Date(dataDeValidade);
+    validade.setHours(0, 0, 0, 0);
 
-        const convertidos: number[] = [parseInt(dia), parseInt(mes), parseInt(ano)]
+    if (validade < hoje) throw new Error("insira uma data válida (data de validade não pode ser no passado)");
+    if (!Number.isInteger(quantidade) || quantidade <= 0) throw new Error("insira uma quantidade válida (deve ser um inteiro positivo)");
+    if (!nome || nome.trim() === "") throw new Error("insira um nome");
 
-        const dataRecebida = new Date(convertidos[2],convertidos[1],convertidos[0])
+    const dataParaBanco = validade.toISOString().split('T')[0];
+    const id: string = `${nome.trim().toLowerCase()}-${dataParaBanco}`;
 
-        const dataTraduzida = dataRecebida.toLocaleDateString('pt-BR')
+    return { id, nome: nome.trim(), quantidade, dataDeValidade: dataParaBanco };
+}
 
-        const retorno: (string | number | Date)[] = [nome, quantidade, dataTraduzida]  
+function PrepararRetorno(nome: string, quantidade: number, dataEmString: string): DtoRetorno {
+    const dataRecebida = new Date(dataEmString + 'T00:00:00');
+    const dataTraduzida = dataRecebida.toLocaleDateString('pt-BR');
 
-        return retorno
+    return { nome, quantidade, dataDeValidade: dataTraduzida };
+}
+
+export async function Salvar(nome: string, quantidade: number, dataDeValidade: Date): Promise<void> {
+    const database = await getDb();
+    try {
+        const produto = PrepararPraSalvar(nome, quantidade, dataDeValidade);
+        const result: SQLiteRunResult = await database.runAsync(
+            `INSERT INTO geladeira (id, nome, quantidade, data_de_validade) VALUES (?, ?, ?, ?)
+             ON CONFLICT(id) DO UPDATE SET quantidade = excluded.quantidade + geladeira.quantidade`,
+            produto.id, produto.nome, produto.quantidade, produto.dataDeValidade
+        );
+        console.log(`[DB] Produto ${nome} salvo/atualizado. Changes: ${result.changes}`);
+    } catch (error) {
+        console.error(`[DB ERROR] Erro ao salvar produto:`, error);
+        throw error;
     }
 }
-export function Deletar(id: string){
 
-    db.run(`DELETE FROM geladira WHERE id = ?`, [id], function(err) {
-        if (err){
-            console.log(err.message)
-        } else if (this.changes === 0){
-            console.log("Nada encontrado para deletar")
-        } else {
-            console.log("deletado com sucesso")
-        }
-    })
-}
-export function Salvar(nome: string, quantidade: number, dataDeValidade: Date){
+export async function Deletar(id: string): Promise<void> {
+    const database = await getDb();
+    const result: SQLiteRunResult = await database.runAsync(
+        `DELETE FROM geladeira WHERE id = ?`, id
+    );
 
-    const retorno = PrepararPraSalvar(nome,quantidade,dataDeValidade)
-
-    db.run(`INSERT INTO geladeira (id, nome, quantidade, data) VALUES (?, ?, ?, ?)`, [retorno[0], retorno[1], retorno[2], retorno[3]], function(err){
-        if (err){
-            console.log(err.message)
-        }
-    console.log(`${nome} inserido com sucesso`)
-    });
-}
-export function ler(){
-
-    db.all("SELECT * FROM geladeira", [], (err, rows: {nome: string, quantidade: number, data_de_validade: string}[]) => {
-        if (err){
-            console.error(err.message)
-        }
-        rows.forEach(row =>{
-
-            const { nome, quantidade, data_de_validade} = row
-
-            PrepararRetorno(nome,quantidade,data_de_validade)
-        })
-    })
-}
-export function lerUmNome(nome: string){
-
-    db.all("SELECT * FROM WHERE nome = ?", [nome], (err, rows: {nome: string, quantidade: number, data_de_validade: string}[]) => {
-        if (err){
-            console.error(err.message)
-        }else{
-        if (!rows){
-            console.log("nada encontrado")
-        }else{
-            rows.forEach(row =>{
-
-                const { nome, quantidade, data_de_validade } = row;
-
-                PrepararRetorno(nome, quantidade, data_de_validade)
-            })
-        }
+    if (result.changes === 0) {
+        console.log(`[DB] Nada encontrado para deletar com o ID: ${id}`);
+        throw new Error("Produto não encontrado para exclusão.");
+    } else {
+        console.log(`[DB] Produto com ID ${id} deletado com sucesso. Mudanças: ${result.changes}`);
     }
-    })
+}
+
+export async function Ler(): Promise<DtoRetorno[]> {
+    const database = await getDb();
+    const rows = await database.getAllAsync<{ nome: string; quantidade: number; data_de_validade: string }>(
+        "SELECT nome, quantidade, data_de_validade FROM geladeira ORDER BY data_de_validade ASC"
+    );
+    return rows.map(row => PrepararRetorno(row.nome, row.quantidade, row.data_de_validade));
+}
+
+export async function LerUmNome(nome: string): Promise<DtoRetorno[]> {
+    const database = await getDb();
+    const rows = await database.getAllAsync<{ nome: string; quantidade: number; data_de_validade: string }>(
+        "SELECT nome, quantidade, data_de_validade FROM geladeira WHERE nome LIKE ?",
+        `%${nome}%`
+    );
+
+    if (rows.length === 0) {
+        console.log(`[DB] Nenhum produto encontrado com o nome: ${nome}`);
+        return [];
+    }
+
+    return rows.map(row => PrepararRetorno(row.nome, row.quantidade, row.data_de_validade));
 }

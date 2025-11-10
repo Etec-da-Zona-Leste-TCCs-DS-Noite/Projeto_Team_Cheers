@@ -1,7 +1,7 @@
 import { groq } from "../infra/groqClient";
-import { ler } from "./repository";
+import { Ler } from "./repository";
 
-const geladeira = ler()
+const geladeira = Ler()
 
 export async function gerarReceita(ingredientes: string[]): Promise<string> {
     
