@@ -1,8 +1,9 @@
 import { openDatabaseAsync, type SQLiteDatabase, SQLiteRunResult } from "expo-sqlite";
 
 type Produto = {
-    id: string;
+    id: number;
     nome: string;
+    marca: string;
     quantidade: number;
     dataDeValidade: string;
 };
@@ -15,8 +16,9 @@ const DB_NAME = 'geladeira.db';
 async function setupTableAsync(database: SQLiteDatabase): Promise<void> {
     const sql = `
         CREATE TABLE IF NOT EXISTS geladeira (
-            id TEXT PRIMARY KEY NOT NULL,
+            id INTEGER PRIMARY KEY NOT NULL AUTOINCREMENT,
             nome TEXT NOT NULL,
+            marca TEXT,
             quantidade INTEGER NOT NULL,
             data_de_validade TEXT NOT NULL
         );
@@ -25,17 +27,13 @@ async function setupTableAsync(database: SQLiteDatabase): Promise<void> {
     console.log('[DB] Tabela geladeira inicializada.');
 }
 
-export async function getDb(): Promise<SQLiteDatabase> {
+export async function initDb(): Promise<SQLiteDatabase> {
     if (!db) {
         db = await openDatabaseAsync(DB_NAME);
         console.log(`[DB] Banco de dados '${DB_NAME}' aberto/criado.`);
         await setupTableAsync(db);
     }
     return db;
-}
-
-export async function inicializarDb(): Promise<void> {
-    await getDb();
 }
 
 function PrepararPraSalvar(nome: string, quantidade: number, dataDeValidade: Date): Produto {
@@ -63,7 +61,7 @@ function PrepararRetorno(nome: string, quantidade: number, dataEmString: string)
 }
 
 export async function Salvar(nome: string, quantidade: number, dataDeValidade: Date): Promise<void> {
-    const database = await getDb();
+    const database = await initDb();
     try {
         const produto = PrepararPraSalvar(nome, quantidade, dataDeValidade);
         const result: SQLiteRunResult = await database.runAsync(
@@ -79,7 +77,7 @@ export async function Salvar(nome: string, quantidade: number, dataDeValidade: D
 }
 
 export async function Deletar(id: string): Promise<void> {
-    const database = await getDb();
+    const database = await initDb();
     const result: SQLiteRunResult = await database.runAsync(
         `DELETE FROM geladeira WHERE id = ?`, id
     );
@@ -93,7 +91,7 @@ export async function Deletar(id: string): Promise<void> {
 }
 
 export async function Ler(): Promise<DtoRetorno[]> {
-    const database = await getDb();
+    const database = await initDb();
     const rows = await database.getAllAsync<{ nome: string; quantidade: number; data_de_validade: string }>(
         "SELECT nome, quantidade, data_de_validade FROM geladeira ORDER BY data_de_validade ASC"
     );
@@ -101,7 +99,7 @@ export async function Ler(): Promise<DtoRetorno[]> {
 }
 
 export async function LerUmNome(nome: string): Promise<DtoRetorno[]> {
-    const database = await getDb();
+    const database = await initDb();
     const rows = await database.getAllAsync<{ nome: string; quantidade: number; data_de_validade: string }>(
         "SELECT nome, quantidade, data_de_validade FROM geladeira WHERE nome LIKE ?",
         `%${nome}%`
