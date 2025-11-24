@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, ScrollView, Text, StyleSheet, Modal, TouchableOpacity, Alert } from "react-native";
+import { Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Header from "../components/Header";
 import InfoCard from "../components/InfoCard";
 import ProductCard from "../components/ProductCard";
@@ -40,16 +40,14 @@ export default function Fridge() {
             handleProductPress({
               name: "Leite integral",
               brand: "Italac",
-              expiry: "08/10/2025",
+              expirationDate: "08/10/2025",
             })
           }
         >
           <ProductCard
             name="Leite integral"
             brand="Italac"
-            expiry="08/10/2025"
-            daysLeft="3 dias"
-            color="#FF4D00"
+            expirationDate="08/10/2025"
           />
         </TouchableOpacity>
 
@@ -59,16 +57,14 @@ export default function Fridge() {
             handleProductPress({
               name: "Leite integral",
               brand: "Italac",
-              expiry: "08/10/2025",
+              expirationDate: "08/10/2025",
             })
           }
         >
           <ProductCard
             name="Leite integral"
             brand="Italac"
-            expiry="08/10/2025"
-            daysLeft="7 dias"
-            color="#FF8F3D"
+            expirationDate="08/10/2025"
           />
         </TouchableOpacity>
 
@@ -77,31 +73,30 @@ export default function Fridge() {
             handleProductPress({
               name: "Farinha de trigo",
               brand: "Dona Benta",
-              expiry: "08/12/2025",
+              expirationDate: "08/12/2025",
             })
           }
         >
           <ProductCard
             name="Farinha de trigo"
             brand="Dona Benta"
-            expiry="08/12/2025"
-            color="rgba(255, 186, 120, 0.45)"
+            expirationDate="08/12/2025"
           />
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Modal */}
+
       <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>
-              {selectedProduct ? selectedProduct.name : ""}
+              {selectedProduct?.name ?? ""}
             </Text>
             <Text style={styles.modalBrand}>
-              {selectedProduct ? selectedProduct.brand : ""}
+              {selectedProduct?.brand ?? ""}
             </Text>
             <Text style={styles.modalExpiry}>
-              Validade: {selectedProduct ? selectedProduct.expiry : ""}
+              Validade: {selectedProduct?.expirationDate ?? ""}
             </Text>
 
             <View style={styles.buttonRow}>

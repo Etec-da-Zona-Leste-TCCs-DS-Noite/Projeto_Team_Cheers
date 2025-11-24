@@ -1,29 +1,47 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry"; 
 
 type Props = {
   name: string;
   brand: string;
-  expiry: string;
-  daysLeft?: string;
-  color?: string;
+  expirationDate: string;
+  remainingDays?: number;
 };
 
 export default function ProductCard({
   name,
   brand,
-  expiry,
-  daysLeft,
-  color = "#FFF",
+  expirationDate,
+  remainingDays,
 }: Props) {
+
+  const exp = new Date(expirationDate);
+  const today = new Date();
+
+
+  const diffTime = exp.getTime() - today.getTime();
+  const calculatedDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+ const days =
+    typeof remainingDays === "string"
+      ? parseInt(remainingDays)
+      : remainingDays ?? calculatedDays;
+
+  const getBackgroundColor = () => {
+    if (calculatedDays <= 7) return "#FF4D00";       
+    if (calculatedDays <= 15) return "#FF8F3D";     
+    return "#FFF";                          
+  };
+
   return (
-    <View style={[styles.card, { backgroundColor: color }]}>
+    <View style={[styles.card, { backgroundColor: getBackgroundColor() }]}>
       <Text style={styles.name}>{name}</Text>
       <Text style={styles.brand}>{brand}</Text>
 
       <View style={styles.bottomRow}>
-        <Text style={styles.expiry}>{expiry}</Text>
-        {daysLeft && <Text style={styles.days}>{daysLeft}</Text>}
+        <Text style={styles.expiry}>{expirationDate}</Text>
+        {remainingDays && <Text style={styles.days}>{remainingDays}</Text>}
       </View>
     </View>
   );

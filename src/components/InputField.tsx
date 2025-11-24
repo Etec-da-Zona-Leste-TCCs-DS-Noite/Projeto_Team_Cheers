@@ -1,12 +1,12 @@
 import React from "react";
-import { View, Text, TextInput, StyleSheet } from "react-native";
+import { View, Text, TextInput, StyleSheet,TextInputProps } from "react-native";
 
 type Props = {
   label: string;
   placeholder: string;
   value?: string;
   onChangeText?: (text: string) => void;
-};
+} & TextInputProps;
 
 export default function InputField({
   label,
@@ -16,7 +16,7 @@ export default function InputField({
   ...rest
 }: Props) {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, rest.style]}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
         style={styles.input}

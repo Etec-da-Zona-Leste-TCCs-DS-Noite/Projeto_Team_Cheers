@@ -1,4 +1,5 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from '@react-native-picker/picker';
 import React, { useState } from "react";
 import {
   Image,
@@ -20,6 +21,7 @@ export default function AddProduct() {
   const [date, setDate] = useState("");
   const [expiry, setExpiry] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedUM, setSelectedUM] = useState();
 
   const handleAdd = () => {
     console.log({ name, brand, date, expiry });
@@ -63,30 +65,49 @@ export default function AddProduct() {
                   label="Data de Validade"
                   placeholder="dd/mm/aaaa"
                   value={date}
-                  editable={false} 
+                  editable={false}
                 />
               </TouchableOpacity>
 
               {showDatePicker && (
                 <DateTimePicker
-                  value={date ? new Date(date) : new Date()} 
+                  value={date ? new Date(date) : new Date()}
                   mode="date"
                   display="default"
                   onChange={(event, selectedDate) => {
                     setShowDatePicker(false);
                     if (selectedDate) {
                       const formatted = selectedDate.toLocaleDateString("pt-BR");
-                      setDate(formatted); 
+                      setDate(formatted);
                     }
                   }}
                 />
               )}
-              <InputField
-                label="Quantidade"
-                placeholder="Ex.: 2 litros"
-                value={expiry}
-                onChangeText={setExpiry}
-              />
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+
+
+                <InputField
+                  label="Quantidade"
+                  placeholder="Ex.: 2 L"
+                  value={expiry}
+                  onChangeText={setExpiry}
+                  style={{ flex: 1, marginRight: 8, width: '50%', border: '1px solid #D9D9D9' }}
+                />
+                <Picker
+                  selectedValue={selectedUM}
+                  onValueChange={(itemValue) => setSelectedUM(itemValue)}
+                  style={{ flex: 1, marginRight: 8, width: '50%' }}
+                >
+                  <Picker.Item label="Medida" value="" />
+                  <Picker.Item label="Litros" value="L" />
+                  <Picker.Item label="Quilogramas" value="kg" />
+                  <Picker.Item label="Gramas" value="g" />
+                  <Picker.Item label="Mililitros" value="mL" />
+                  <Picker.Item label="Unidades" value="un" />
+
+                </Picker>
+              </View>
+
 
               <PrimaryButton label="Adicionar" onPress={handleAdd} />
             </View>

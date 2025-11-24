@@ -53,7 +53,7 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
-        name="chat"
+        name="consumed"
         options={{
           tabBarIcon: ({ focused }) => (
             <MaterialCommunityIcons
