@@ -3,12 +3,12 @@ import { openDatabaseAsync, type SQLiteDatabase, SQLiteRunResult } from "expo-sq
 type Produto = {
     id: number;
     nome: string;
-    marca: string;
+    marca: string | null;
     quantidade: number;
     dataDeValidade: string;
 };
 
-type DtoRetorno = Omit<Produto, 'id'>;
+type DTOProduto = Omit<Produto, 'id'>;
 
 let db: SQLiteDatabase | null = null;
 const DB_NAME = 'geladeira.db';
@@ -36,7 +36,7 @@ export async function initDb(): Promise<SQLiteDatabase> {
     return db;
 }
 
-function PrepararPraSalvar(nome: string, quantidade: number, dataDeValidade: Date): Produto {
+function PrepararPraSalvar(nome: string, marca: string | null, quantidade: number, dataDeValidade: Date): DTOProduto {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
@@ -50,24 +50,24 @@ function PrepararPraSalvar(nome: string, quantidade: number, dataDeValidade: Dat
     const dataParaBanco = validade.toISOString().split('T')[0];
     const id: string = `${nome.trim().toLowerCase()}-${dataParaBanco}`;
 
-    return { id, nome: nome.trim(), quantidade, dataDeValidade: dataParaBanco };
+    return { nome: nome, marca, quantidade, dataDeValidade: dataParaBanco };
 }
 
-function PrepararRetorno(nome: string, quantidade: number, dataEmString: string): DtoRetorno {
+function PrepararRetorno(nome: string, marca: string | null, quantidade: number, dataEmString: string): DTOProduto {
     const dataRecebida = new Date(dataEmString + 'T00:00:00');
     const dataTraduzida = dataRecebida.toLocaleDateString('pt-BR');
 
-    return { nome, quantidade, dataDeValidade: dataTraduzida };
+    return { nome, marca, quantidade, dataDeValidade: dataTraduzida };
 }
 
-export async function Salvar(nome: string, quantidade: number, dataDeValidade: Date): Promise<void> {
+export async function Salvar(nome: string, marca: string | null, quantidade: number, dataDeValidade: Date): Promise<void> {
     const database = await initDb();
     try {
-        const produto = PrepararPraSalvar(nome, quantidade, dataDeValidade);
+        const produto = PrepararPraSalvar(nome, marca, quantidade, dataDeValidade);
         const result: SQLiteRunResult = await database.runAsync(
             `INSERT INTO geladeira (id, nome, quantidade, data_de_validade) VALUES (?, ?, ?, ?)
              ON CONFLICT(id) DO UPDATE SET quantidade = excluded.quantidade + geladeira.quantidade`,
-            produto.id, produto.nome, produto.quantidade, produto.dataDeValidade
+            produto.nome, produto.quantidade, produto.dataDeValidade
         );
         console.log(`[DB] Produto ${nome} salvo/atualizado. Changes: ${result.changes}`);
     } catch (error) {
@@ -90,17 +90,17 @@ export async function Deletar(id: string): Promise<void> {
     }
 }
 
-export async function Ler(): Promise<DtoRetorno[]> {
+export async function Ler(): Promise<DTOProduto[]> {
     const database = await initDb();
-    const rows = await database.getAllAsync<{ nome: string; quantidade: number; data_de_validade: string }>(
+    const rows = await database.getAllAsync<{ nome: string; marca: string | null, quantidade: number; data_de_validade: string }>(
         "SELECT nome, quantidade, data_de_validade FROM geladeira ORDER BY data_de_validade ASC"
     );
-    return rows.map(row => PrepararRetorno(row.nome, row.quantidade, row.data_de_validade));
+    return rows.map(row => PrepararRetorno(row.nome, row.marca, row.quantidade, row.data_de_validade));
 }
 
-export async function LerUmNome(nome: string): Promise<DtoRetorno[]> {
+export async function LerUmNome(nome: string): Promise<DTOProduto[]> {
     const database = await initDb();
-    const rows = await database.getAllAsync<{ nome: string; quantidade: number; data_de_validade: string }>(
+    const rows = await database.getAllAsync<{ nome: string; marca: string | null, quantidade: number; data_de_validade: string }>(
         "SELECT nome, quantidade, data_de_validade FROM geladeira WHERE nome LIKE ?",
         `%${nome}%`
     );
@@ -110,5 +110,5 @@ export async function LerUmNome(nome: string): Promise<DtoRetorno[]> {
         return [];
     }
 
-    return rows.map(row => PrepararRetorno(row.nome, row.quantidade, row.data_de_validade));
+    return rows.map(row => PrepararRetorno(row.nome, row.marca, row.quantidade, row.data_de_validade));
 }
