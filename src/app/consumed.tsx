@@ -1,25 +1,40 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
   FlatList,
   ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
-import PeriodFilter from "../components/PeriodFilter";
-import Header from "../components/Header";
 import ConsumedCard from "../components/ConsumedCard";
+import Header from "../components/Header";
+import PeriodFilter from "../components/PeriodFilter";
+import { useConsumed } from "../context/ConsumedContext";
 
 type ConsumedItem = {
   id: string;
   name: string;
   brand: string;
-  date: string; 
+  date: string;
 };
 
 export default function Consumed() {
+  const { consumed } = useConsumed();
   const [period, setPeriod] = useState(7);
   const [items, setItems] = useState<ConsumedItem[]>([]);
+
+  const filtered = consumed.filter(item => {
+    const consumedDate = new Date(item.consumedAt);
+    const today = new Date();
+
+    const diff = today.getTime() - consumedDate.getTime();
+    const days = diff / (1000 * 60 * 60 * 24);
+
+    return days <= period;
+
+  });
+
+
 
   // 🔥 Mock inicial — depois isso será trocado por AsyncStorage ou backend
   useEffect(() => {
@@ -48,22 +63,24 @@ export default function Consumed() {
           <PeriodFilter value={period} onChange={setPeriod} />
         </View>
 
-        <View style={{ marginTop: 20 }}>
-          <FlatList
-            data={items}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={false} 
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-            renderItem={({ item }) => (
+        <View style={{ marginTop: 20, paddingHorizontal: 16 }}>
+          {filtered.length === 0 ? (
+            <Text style={{ textAlign: "center", opacity: 0.6 }}>
+              Nenhum produto consumido neste período.
+            </Text>
+          ) : (
+            filtered.map((item) => (
               <ConsumedCard
+                key={item.id}
                 name={item.name}
                 brand={item.brand}
-                date={item.date}
+                date={item.consumedAt}
                 onDelete={() => deleteItem(item.id)}
               />
-            )}
-          />
+            ))
+          )}
         </View>
+
       </ScrollView>
     </View>
   );
@@ -73,7 +90,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "white",
-    padding: 20,
   },
   title: {
     fontSize: 20,

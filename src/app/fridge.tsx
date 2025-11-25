@@ -3,25 +3,60 @@ import { Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } fr
 import Header from "../components/Header";
 import InfoCard from "../components/InfoCard";
 import ProductCard from "../components/ProductCard";
+import { useProducts } from "../context/ProductContext";
+import { useConsumed } from "../context/ConsumedContext";
+import type { Product } from "../context/ProductContext";
+
+
 
 export default function Fridge() {
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const { products, removeProduct, consumeProduct } = useProducts();
+  const { addConsumed } = useConsumed();
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const handleProductPress = (product) => {
+  const handleProductPress = (product: Product) => {
     setSelectedProduct(product);
     setModalVisible(true);
   };
 
   const handleConsumed = () => {
+    if (!selectedProduct) return;
+
+    const consumedData = {
+      ...selectedProduct,
+      consumedAt: new Date().toISOString(), // salva o dia do consumo
+    };
+
+    addConsumed(consumedData);        // adiciona aos consumidos
+    removeProduct(selectedProduct.id);  // remove da geladeira
+
     setModalVisible(false);
     Alert.alert("✅ Produto consumido");
   };
 
   const handleDelete = () => {
+    if (!selectedProduct) return;
+
+    removeProduct(selectedProduct.id);
+
     setModalVisible(false);
     Alert.alert("❌ Produto excluído");
   };
+
+  const countExpiring = products.filter((p) => {
+    const [d, m, a] = p.expirationDate.split("/").map(Number);
+    const exp = new Date(a, m - 1, d);
+
+    exp.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const diff = exp.getTime() - today.getTime();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+    return days <= 7;
+  }).length;
 
   return (
     <View style={styles.container}>
@@ -29,60 +64,30 @@ export default function Fridge() {
         <Header />
 
         <View style={styles.infoRow}>
-          <InfoCard title="Total de Produtos" value={3} />
-          <InfoCard title="Vencendo" value={1} />
+          <InfoCard title="Total de Produtos" value={products.length} />
+          <InfoCard title="Vencendo" value={countExpiring} />
         </View>
 
         <Text style={styles.sectionTitle}>Meus produtos</Text>
 
-        <TouchableOpacity
-          onPress={() =>
-            handleProductPress({
-              name: "Leite integral",
-              brand: "Italac",
-              expirationDate: "08/10/2025",
-            })
-          }
-        >
-          <ProductCard
-            name="Leite integral"
-            brand="Italac"
-            expirationDate="08/10/2025"
-          />
-        </TouchableOpacity>
+        {products.length === 0 && (
+          <Text style={{ marginTop: 20, textAlign: "center", opacity: 0.6 }}>
+            Nenhum produto adicionado ainda
+          </Text>
+        )}
 
-        
-        <TouchableOpacity
-          onPress={() =>
-            handleProductPress({
-              name: "Leite integral",
-              brand: "Italac",
-              expirationDate: "08/10/2025",
-            })
-          }
-        >
-          <ProductCard
-            name="Leite integral"
-            brand="Italac"
-            expirationDate="08/10/2025"
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() =>
-            handleProductPress({
-              name: "Farinha de trigo",
-              brand: "Dona Benta",
-              expirationDate: "08/12/2025",
-            })
-          }
-        >
-          <ProductCard
-            name="Farinha de trigo"
-            brand="Dona Benta"
-            expirationDate="08/12/2025"
-          />
-        </TouchableOpacity>
+        {products.map((product, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => handleProductPress(product)}
+          >
+            <ProductCard
+              name={product.name}
+              brand={product.brand}
+              expirationDate={product.expirationDate}
+            />
+          </TouchableOpacity>
+        ))}
       </ScrollView>
 
 

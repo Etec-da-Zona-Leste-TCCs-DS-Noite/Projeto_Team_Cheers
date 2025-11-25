@@ -1,11 +1,29 @@
 import React from "react";
-import { View, ScrollView, Text, Image, StyleSheet } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import Header from "../components/Header";
 import InfoCard from "../components/InfoCard";
-import RecipeCard from "../components/RecipeCard";
 import PrimaryButton from "../components/PrimaryButton";
+import RecipeCard from "../components/RecipeCard";
+import { useProducts } from "../context/ProductContext";
+
 
 export default function Index() {
+  const { products } = useProducts();
+
+  const countExpiring = products.filter((p) => {
+    const [d, m, a] = p.expirationDate.split("/").map(Number);
+    const exp = new Date(a, m - 1, d);
+
+    exp.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const diff = exp.getTime() - today.getTime();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+    return days <= 7;
+  }).length;
+
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -17,8 +35,8 @@ export default function Index() {
         />
 
         <View style={styles.cardsContainer}>
-          <InfoCard title="Total de Produtos" value={0} />
-          <InfoCard title="Vencendo" value={0} />
+          <InfoCard title="Total de Produtos" value={products.length} />
+          <InfoCard title="Vencendo" value={countExpiring} />
         </View>
 
         <Text style={styles.sectionTitle}>Receitas</Text>

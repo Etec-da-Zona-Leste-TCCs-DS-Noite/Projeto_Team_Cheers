@@ -18,14 +18,16 @@ export default function ConsumedCard({ name, brand, date, onDelete }: Props) {
 
         <View style={styles.dateRow}>
           <Ionicons name="calendar-outline" size={16} color="#000" />
-          <Text style={styles.date}>{date}</Text>
+          <Text style={styles.date}>
+            {new Date(date).toLocaleDateString("pt-BR")}
+          </Text>
         </View>
       </View>
 
-      <TouchableOpacity onPress={onDelete}>
+      {/* <TouchableOpacity onPress={onDelete}>
         <Ionicons name="trash-outline" size={22} color="black" />
-      </TouchableOpacity>
-    </View>
+      </TouchableOpacity>*/}
+    </View> 
   );
 }
 

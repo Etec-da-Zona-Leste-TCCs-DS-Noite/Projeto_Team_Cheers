@@ -1,4 +1,6 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useProducts } from "../context/ProductContext";
+import { useNavigation } from "@react-navigation/native";
 import { Picker } from '@react-native-picker/picker';
 import React, { useState } from "react";
 import {
@@ -14,6 +16,8 @@ import {
 import Header from "../components/Header";
 import InputField from "../components/InputField";
 import PrimaryButton from "../components/PrimaryButton";
+import { router } from "expo-router";
+
 
 export default function AddProduct() {
   const [name, setName] = useState("");
@@ -22,9 +26,20 @@ export default function AddProduct() {
   const [expiry, setExpiry] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedUM, setSelectedUM] = useState();
+  const { addProduct } = useProducts();
+  const navigation = useNavigation();
 
   const handleAdd = () => {
-    console.log({ name, brand, date, expiry });
+    const newProduct = {
+      id: String(Date.now()),
+      name,
+      brand,
+      expirationDate: date,
+      quantity: expiry,
+      unitMeasure: selectedUM,
+    };
+    addProduct(newProduct);
+    router.push("/fridge");
   };
 
   return (
@@ -91,7 +106,7 @@ export default function AddProduct() {
                   placeholder="Ex.: 2 L"
                   value={expiry}
                   onChangeText={setExpiry}
-                  style={{ flex: 1, marginRight: 8, width: '50%', border: '1px solid #D9D9D9' }}
+                  style={{ flex: 1, marginRight: 8, width: '50%' }}
                 />
                 <Picker
                   selectedValue={selectedUM}

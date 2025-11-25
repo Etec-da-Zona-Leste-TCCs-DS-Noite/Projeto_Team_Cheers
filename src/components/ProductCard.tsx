@@ -1,6 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry"; 
+import { StyleSheet, Text, View } from "react-native";
 
 type Props = {
   name: string;
@@ -9,6 +8,11 @@ type Props = {
   remainingDays?: number;
 };
 
+function parseBRDate(dateString: string) {
+  const [day, month, year] = dateString.split("/").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export default function ProductCard({
   name,
   brand,
@@ -16,21 +20,18 @@ export default function ProductCard({
   remainingDays,
 }: Props) {
 
-  const exp = new Date(expirationDate);
+  const exp = parseBRDate(expirationDate);
   const today = new Date();
 
+  exp.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
 
-  const diffTime = exp.getTime() - today.getTime();
-  const calculatedDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
- const days =
-    typeof remainingDays === "string"
-      ? parseInt(remainingDays)
-      : remainingDays ?? calculatedDays;
+  let diffTime = exp.getTime() - today.getTime();
+  let days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   const getBackgroundColor = () => {
-    if (calculatedDays <= 7) return "#FF4D00";       
-    if (calculatedDays <= 15) return "#FF8F3D";     
+    if (days <= 7) return "#FF4D00";       
+    if (days <= 15) return "#FF8F3D";     
     return "#FFF";                          
   };
 
@@ -41,7 +42,7 @@ export default function ProductCard({
 
       <View style={styles.bottomRow}>
         <Text style={styles.expiry}>{expirationDate}</Text>
-        {remainingDays && <Text style={styles.days}>{remainingDays}</Text>}
+        <Text style={styles.days}>{days} dias</Text>
       </View>
     </View>
   );
@@ -50,10 +51,12 @@ export default function ProductCard({
 const styles = StyleSheet.create({
   card: {
     width: "90%",
-    borderRadius: 10,
     padding: 16,
     marginVertical: 8,
     alignSelf: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#D9D9D9",
   },
   name: {
     fontSize: 16,
