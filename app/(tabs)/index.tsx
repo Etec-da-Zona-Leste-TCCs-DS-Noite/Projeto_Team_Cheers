@@ -1,13 +1,14 @@
 import React, { useEffect } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import Header from "../src/components/Header";
-import InfoCard from "../src/components/InfoCard";
-import PrimaryButton from "../src/components/PrimaryButton";
-import RecipeCard from "../src/components/RecipeCard";
-import { Product } from "../src/context/ProductContext";
-import { Recipe } from "../src/context/RecipeContext";
-import { getProducts } from "../src/services/productStorage";
-import { fetchRecipes } from "../src/services/RecipeService";
+import Header from "../../src/components/Header";
+import InfoCard from "../../src/components/InfoCard";
+import PrimaryButton from "../../src/components/PrimaryButton";
+import RecipeCard from "../../src/components/RecipeCard";
+import { Product } from "../../src/context/ProductContext";
+import { Recipe } from "../../src/context/RecipeContext";
+import { getProducts } from "../../src/services/productStorage";
+import { fetchRecipes } from "../../src/services/RecipeService";
+import { useNavigation } from "@react-navigation/native";
 
 
 export default function Index() {
@@ -15,10 +16,11 @@ export default function Index() {
   const [recipes, setRecipes] = React.useState<Recipe[]>([]);
   const [products, setProducts] = React.useState<Product[]>([]);
   const [countExpiring, setCountExpiring] = React.useState(0);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const expiring = products.filter((p) => {
-      const [d, m, a] = p.expirationDate.split("/").map(Number);
+      const [d, m, a] = p.expirationDate.split("/")?.map(Number);
       const exp = new Date(a, m - 1, d);
 
       exp.setHours(0, 0, 0, 0);
@@ -35,8 +37,11 @@ export default function Index() {
   }, [products]);
 
   React.useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      getProducts().then(setProducts);
+    });
+    return unsubscribe;
 
-    getProducts().then(setProducts);
   }, []);
 
   return (
@@ -45,7 +50,7 @@ export default function Index() {
         <Header />
 
         <Image
-          source={require("../assets/imagens/hero-banner.png")}
+          source={require("../../assets/imagens/hero-banner.png")}
           style={styles.banner}
         />
 

@@ -1,13 +1,13 @@
-import { useFocusEffect } from "expo-router";
-import React, { useCallback, useState } from "react";
+import { useFocusEffect, useNavigation } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import { Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Header from "../src/components/Header";
-import InfoCard from "../src/components/InfoCard";
-import ProductCard from "../src/components/ProductCard";
-import { useConsumed } from "../src/context/ConsumedContext";
-import type { Product } from "../src/context/ProductContext";
-import { useProducts } from "../src/context/ProductContext";
-import { deleteProduct, getProducts } from "../src/services/productStorage";
+import Header from "../../src/components/Header";
+import InfoCard from "../../src/components/InfoCard";
+import ProductCard from "../../src/components/ProductCard";
+import { useConsumed } from "../../src/context/ConsumedContext";
+import type { Product } from "../../src/context/ProductContext";
+import { useProducts } from "../../src/context/ProductContext";
+import { deleteProduct, getProducts } from "../../src/services/productStorage";
 
 
 
@@ -17,6 +17,7 @@ export default function Fridge() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const navigation = useNavigation();
 
   const handleProductPress = (product: Product) => {
     setSelectedProduct(product);
@@ -63,11 +64,14 @@ export default function Fridge() {
     return days <= 7;
   }).length;
 
-  useFocusEffect(
-    useCallback(() => {
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('Screen is focused again');
       getProducts().then(setProducts);
-    }, [])
-  );
+
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   return (
     <View style={styles.container}>

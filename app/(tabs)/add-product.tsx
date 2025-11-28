@@ -13,11 +13,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Header from "../src/components/Header";
-import InputField from "../src/components/InputField";
-import PrimaryButton from "../src/components/PrimaryButton";
-import { Product } from "../src/context/ProductContext";
-import { addProduct } from "../src/services/productStorage";
+import Header from "../../src/components/Header";
+import InputField from "../../src/components/InputField";
+import PrimaryButton from "../../src/components/PrimaryButton";
+import { Product } from "../../src/context/ProductContext";
+import { addProduct } from "../../src/services/productStorage";
 
 
 export default function AddProduct() {
@@ -38,8 +38,11 @@ export default function AddProduct() {
       unitMeasure: selectedUM,
       quantity: expiry,
     } as Omit<Product, "id">;
-    addProduct(newProduct);
-    router.replace("/fridge");
+    addProduct(newProduct).then(() => {
+      // Atualiza a lista de produtos na tela da geladeira
+      router.navigate("/(tabs)/fridge");
+    })
+
   };
 
   return (
@@ -48,7 +51,7 @@ export default function AddProduct() {
         <Header />
 
         <Image
-          source={require("../assets/imagens/hero-banner.png")}
+          source={require("../../assets/imagens/hero-banner.png")}
           style={styles.banner}
         />
 
