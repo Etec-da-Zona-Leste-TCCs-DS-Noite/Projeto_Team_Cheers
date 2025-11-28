@@ -1,27 +1,73 @@
-import React, { useState } from "react";
-import { View, ScrollView, Text, StyleSheet, Modal, TouchableOpacity, Alert } from "react-native";
-import Header from "../components/Header";
-import InfoCard from "../components/InfoCard";
-import ProductCard from "../components/ProductCard";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Header from "../src/components/Header";
+import InfoCard from "../src/components/InfoCard";
+import ProductCard from "../src/components/ProductCard";
+import { useConsumed } from "../src/context/ConsumedContext";
+import type { Product } from "../src/context/ProductContext";
+import { useProducts } from "../src/context/ProductContext";
+import { deleteProduct, getProducts } from "../src/services/productStorage";
+
+
 
 export default function Fridge() {
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const { removeProduct, consumeProduct } = useProducts();
+  const { addConsumed } = useConsumed();
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
 
-  const handleProductPress = (product) => {
+  const handleProductPress = (product: Product) => {
     setSelectedProduct(product);
     setModalVisible(true);
   };
 
   const handleConsumed = () => {
+    if (!selectedProduct) return;
+
+    const consumedData = {
+      ...selectedProduct,
+      consumedAt: new Date().toISOString(), // salva o dia do consumo
+    };
+
+    addConsumed(consumedData);        // adiciona aos consumidos
+    removeProduct(selectedProduct.id);  // remove da geladeira
+
     setModalVisible(false);
     Alert.alert("✅ Produto consumido");
   };
 
   const handleDelete = () => {
+    if (!selectedProduct) return;
+
+    deleteProduct(selectedProduct.id).then(() => {
+      getProducts().then(setProducts);
+    });
+
     setModalVisible(false);
     Alert.alert("❌ Produto excluído");
   };
+
+  const countExpiring = products.filter((p) => {
+    const [d, m, a] = p.expirationDate.split("/").map(Number);
+    const exp = new Date(a, m - 1, d);
+
+    exp.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const diff = exp.getTime() - today.getTime();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+    return days <= 7;
+  }).length;
+
+  useFocusEffect(
+    useCallback(() => {
+      getProducts().then(setProducts);
+    }, [])
+  );
 
   return (
     <View style={styles.container}>
@@ -29,79 +75,44 @@ export default function Fridge() {
         <Header />
 
         <View style={styles.infoRow}>
-          <InfoCard title="Total de Produtos" value={3} />
-          <InfoCard title="Vencendo" value={1} />
+          <InfoCard title="Total de Produtos" value={products.length} />
+          <InfoCard title="Vencendo" value={countExpiring} />
         </View>
 
         <Text style={styles.sectionTitle}>Meus produtos</Text>
 
-        <TouchableOpacity
-          onPress={() =>
-            handleProductPress({
-              name: "Leite integral",
-              brand: "Italac",
-              expiry: "08/10/2025",
-            })
-          }
-        >
-          <ProductCard
-            name="Leite integral"
-            brand="Italac"
-            expiry="08/10/2025"
-            daysLeft="3 dias"
-            color="#FF4D00"
-          />
-        </TouchableOpacity>
+        {products.length === 0 && (
+          <Text style={{ marginTop: 20, textAlign: "center", opacity: 0.6 }}>
+            Nenhum produto adicionado ainda
+          </Text>
+        )}
 
-        
-        <TouchableOpacity
-          onPress={() =>
-            handleProductPress({
-              name: "Leite integral",
-              brand: "Italac",
-              expiry: "08/10/2025",
-            })
-          }
-        >
-          <ProductCard
-            name="Leite integral"
-            brand="Italac"
-            expiry="08/10/2025"
-            daysLeft="7 dias"
-            color="#FF8F3D"
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() =>
-            handleProductPress({
-              name: "Farinha de trigo",
-              brand: "Dona Benta",
-              expiry: "08/12/2025",
-            })
-          }
-        >
-          <ProductCard
-            name="Farinha de trigo"
-            brand="Dona Benta"
-            expiry="08/12/2025"
-            color="rgba(255, 186, 120, 0.45)"
-          />
-        </TouchableOpacity>
+        {products.map((product, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => handleProductPress(product)}
+          >
+            <ProductCard
+              name={product.name}
+              brand={product.brand}
+              expirationDate={product.expirationDate}
+            />
+          </TouchableOpacity>
+        ))}
       </ScrollView>
 
-      {/* Modal */}
+
       <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>
-              {selectedProduct ? selectedProduct.name : ""}
+              {selectedProduct?.name ?? ""}
             </Text>
             <Text style={styles.modalBrand}>
-              {selectedProduct ? selectedProduct.brand : ""}
+              {selectedProduct?.brand ?? ""}
             </Text>
             <Text style={styles.modalExpiry}>
-              Validade: {selectedProduct ? selectedProduct.expiry : ""}
+              Validade: {selectedProduct?.expirationDate ?? ""}
             </Text>
 
             <View style={styles.buttonRow}>

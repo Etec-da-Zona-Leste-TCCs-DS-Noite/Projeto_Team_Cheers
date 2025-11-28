@@ -1,29 +1,48 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 type Props = {
   name: string;
   brand: string;
-  expiry: string;
-  daysLeft?: string;
-  color?: string;
+  expirationDate: string;
+  remainingDays?: number;
 };
+
+function parseBRDate(dateString: string) {
+  const [day, month, year] = dateString.split("/").map(Number);
+  return new Date(year, month - 1, day);
+}
 
 export default function ProductCard({
   name,
   brand,
-  expiry,
-  daysLeft,
-  color = "#FFF",
+  expirationDate,
+  remainingDays,
 }: Props) {
+
+  const exp = parseBRDate(expirationDate);
+  const today = new Date();
+
+  exp.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  let diffTime = exp.getTime() - today.getTime();
+  let days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  const getBackgroundColor = () => {
+    if (days <= 7) return "#FF4D00";       
+    if (days <= 15) return "#FF8F3D";     
+    return "#FFF";                          
+  };
+
   return (
-    <View style={[styles.card, { backgroundColor: color }]}>
+    <View style={[styles.card, { backgroundColor: getBackgroundColor() }]}>
       <Text style={styles.name}>{name}</Text>
       <Text style={styles.brand}>{brand}</Text>
 
       <View style={styles.bottomRow}>
-        <Text style={styles.expiry}>{expiry}</Text>
-        {daysLeft && <Text style={styles.days}>{daysLeft}</Text>}
+        <Text style={styles.expiry}>{expirationDate}</Text>
+        <Text style={styles.days}>{days} dias</Text>
       </View>
     </View>
   );
@@ -32,10 +51,12 @@ export default function ProductCard({
 const styles = StyleSheet.create({
   card: {
     width: "90%",
-    borderRadius: 10,
     padding: 16,
     marginVertical: 8,
     alignSelf: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#D9D9D9",
   },
   name: {
     fontSize: 16,

@@ -1,4 +1,7 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from "@react-navigation/native";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
@@ -10,9 +13,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Header from "../components/Header";
-import InputField from "../components/InputField";
-import PrimaryButton from "../components/PrimaryButton";
+import Header from "../src/components/Header";
+import InputField from "../src/components/InputField";
+import PrimaryButton from "../src/components/PrimaryButton";
+import { Product } from "../src/context/ProductContext";
+import { addProduct } from "../src/services/productStorage";
+
 
 export default function AddProduct() {
   const [name, setName] = useState("");
@@ -20,9 +26,20 @@ export default function AddProduct() {
   const [date, setDate] = useState("");
   const [expiry, setExpiry] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedUM, setSelectedUM] = useState("");
+  // const { addProduct } = useProducts();
+  const navigation = useNavigation();
 
   const handleAdd = () => {
-    console.log({ name, brand, date, expiry });
+    const newProduct = {
+      name,
+      brand,
+      expirationDate: date,
+      unitMeasure: selectedUM,
+      quantity: expiry,
+    } as Omit<Product, "id">;
+    addProduct(newProduct);
+    router.replace("/fridge");
   };
 
   return (
@@ -31,7 +48,7 @@ export default function AddProduct() {
         <Header />
 
         <Image
-          source={require("../../assets/imagens/hero-banner.png")}
+          source={require("../assets/imagens/hero-banner.png")}
           style={styles.banner}
         />
 
@@ -63,30 +80,49 @@ export default function AddProduct() {
                   label="Data de Validade"
                   placeholder="dd/mm/aaaa"
                   value={date}
-                  editable={false} 
+                  editable={false}
                 />
               </TouchableOpacity>
 
               {showDatePicker && (
                 <DateTimePicker
-                  value={date ? new Date(date) : new Date()} 
+                  value={date ? new Date(date) : new Date()}
                   mode="date"
                   display="default"
                   onChange={(event, selectedDate) => {
                     setShowDatePicker(false);
                     if (selectedDate) {
                       const formatted = selectedDate.toLocaleDateString("pt-BR");
-                      setDate(formatted); 
+                      setDate(formatted);
                     }
                   }}
                 />
               )}
-              <InputField
-                label="Quantidade"
-                placeholder="Ex.: 2 litros"
-                value={expiry}
-                onChangeText={setExpiry}
-              />
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+
+
+                <InputField
+                  label="Quantidade"
+                  placeholder="Ex.: 2 L"
+                  value={expiry}
+                  onChangeText={setExpiry}
+                  style={{ flex: 1, marginRight: 8, width: '50%' }}
+                />
+                <Picker
+                  selectedValue={selectedUM}
+                  onValueChange={(itemValue) => setSelectedUM(itemValue)}
+                  style={{ flex: 1, marginRight: 8, width: '50%' }}
+                >
+                  <Picker.Item label="Medida" value="" />
+                  <Picker.Item label="Litros" value="L" />
+                  <Picker.Item label="Quilogramas" value="kg" />
+                  <Picker.Item label="Gramas" value="g" />
+                  <Picker.Item label="Mililitros" value="mL" />
+                  <Picker.Item label="Unidades" value="un" />
+
+                </Picker>
+              </View>
+
 
               <PrimaryButton label="Adicionar" onPress={handleAdd} />
             </View>
