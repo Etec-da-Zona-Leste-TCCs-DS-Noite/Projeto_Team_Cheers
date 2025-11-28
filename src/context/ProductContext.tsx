@@ -6,6 +6,8 @@ export type Product = {
     name: string;
     brand: string;
     expirationDate: string;
+    unitMeasure: string;
+    quantity: string;
 };
 
 type ProductContextType = {

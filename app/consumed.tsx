@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
 import {
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View
 } from "react-native";
-import ConsumedCard from "../components/ConsumedCard";
-import Header from "../components/Header";
-import PeriodFilter from "../components/PeriodFilter";
-import { useConsumed } from "../context/ConsumedContext";
+import ConsumedCard from "../src/components/ConsumedCard";
+import Header from "../src/components/Header";
+import PeriodFilter from "../src/components/PeriodFilter";
+import { useConsumed } from "../src/context/ConsumedContext";
 
 type ConsumedItem = {
   id: string;

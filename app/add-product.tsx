@@ -1,7 +1,7 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useProducts } from "../context/ProductContext";
-import { useNavigation } from "@react-navigation/native";
 import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from "@react-navigation/native";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
@@ -13,10 +13,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Header from "../components/Header";
-import InputField from "../components/InputField";
-import PrimaryButton from "../components/PrimaryButton";
-import { router } from "expo-router";
+import Header from "../src/components/Header";
+import InputField from "../src/components/InputField";
+import PrimaryButton from "../src/components/PrimaryButton";
+import { Product } from "../src/context/ProductContext";
+import { addProduct } from "../src/services/productStorage";
 
 
 export default function AddProduct() {
@@ -25,21 +26,20 @@ export default function AddProduct() {
   const [date, setDate] = useState("");
   const [expiry, setExpiry] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedUM, setSelectedUM] = useState();
-  const { addProduct } = useProducts();
+  const [selectedUM, setSelectedUM] = useState("");
+  // const { addProduct } = useProducts();
   const navigation = useNavigation();
 
   const handleAdd = () => {
     const newProduct = {
-      id: String(Date.now()),
       name,
       brand,
       expirationDate: date,
-      quantity: expiry,
       unitMeasure: selectedUM,
-    };
+      quantity: expiry,
+    } as Omit<Product, "id">;
     addProduct(newProduct);
-    router.push("/fridge");
+    router.replace("/fridge");
   };
 
   return (
@@ -48,7 +48,7 @@ export default function AddProduct() {
         <Header />
 
         <Image
-          source={require("../../assets/imagens/hero-banner.png")}
+          source={require("../assets/imagens/hero-banner.png")}
           style={styles.banner}
         />
 

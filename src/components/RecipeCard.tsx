@@ -1,15 +1,27 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { Recipe } from "../context/RecipeContext";
 
-export default function RecipeCard() {
+export default function RecipeCard({ recipe = {} }: { recipe: Recipe }) {
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Leite integral - Italac</Text>
+      <Text style={styles.title}>{recipe.nome}</Text>
       <Text style={styles.text}>
-        Faça um pudim ou vitamina{"\n"}
-        Use em receitas de bolo{"\n"}
-        Prepare mingau
+        Ingredientes:
       </Text>
+      {recipe.ingredientes?.map((ingrediente, index) => (
+        <Text key={index} style={styles.text}>
+          • {ingrediente}
+        </Text>
+      ))}
+      <Text style={styles.text}>
+        Passo a passo:
+      </Text>
+      {recipe.passo_a_passo?.map((passo, index) => (
+        <Text key={index} style={styles.text}>
+          {index + 1}. {passo}
+        </Text>
+      ))}
     </View>
   );
 }

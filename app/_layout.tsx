@@ -1,8 +1,8 @@
-import React from "react";
-import { Stack, Tabs } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { ProductProvider } from "../context/ProductContext";
-import { ConsumedProvider } from "../context/ConsumedContext";
+import { Tabs } from "expo-router";
+import React from "react";
+import { ConsumedProvider } from "../src/context/ConsumedContext";
+import { ProductProvider } from "../src/context/ProductContext";
 
 export default function Layout() {
   return (

@@ -1,19 +1,22 @@
-import React, { useState } from "react";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Header from "../components/Header";
-import InfoCard from "../components/InfoCard";
-import ProductCard from "../components/ProductCard";
-import { useProducts } from "../context/ProductContext";
-import { useConsumed } from "../context/ConsumedContext";
-import type { Product } from "../context/ProductContext";
+import Header from "../src/components/Header";
+import InfoCard from "../src/components/InfoCard";
+import ProductCard from "../src/components/ProductCard";
+import { useConsumed } from "../src/context/ConsumedContext";
+import type { Product } from "../src/context/ProductContext";
+import { useProducts } from "../src/context/ProductContext";
+import { deleteProduct, getProducts } from "../src/services/productStorage";
 
 
 
 export default function Fridge() {
-  const { products, removeProduct, consumeProduct } = useProducts();
+  const { removeProduct, consumeProduct } = useProducts();
   const { addConsumed } = useConsumed();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const handleProductPress = (product: Product) => {
     setSelectedProduct(product);
@@ -38,7 +41,9 @@ export default function Fridge() {
   const handleDelete = () => {
     if (!selectedProduct) return;
 
-    removeProduct(selectedProduct.id);
+    deleteProduct(selectedProduct.id).then(() => {
+      getProducts().then(setProducts);
+    });
 
     setModalVisible(false);
     Alert.alert("❌ Produto excluído");
@@ -57,6 +62,12 @@ export default function Fridge() {
 
     return days <= 7;
   }).length;
+
+  useFocusEffect(
+    useCallback(() => {
+      getProducts().then(setProducts);
+    }, [])
+  );
 
   return (
     <View style={styles.container}>
